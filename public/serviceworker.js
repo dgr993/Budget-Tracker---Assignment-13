@@ -30,8 +30,31 @@ self.addEventListener("fetch",(event) => {
                     cache.put(event.request.url,response.clone())
                 }
                 return response
+            }).catch((err)=> {
+                return cache.match(event.request(err))
             })
+            .catch((err)=>
+            console.log(err));
         }))
     }
+})
+
+self.addEventListener("activate",(event) => {
+    const currentCaches = [PRECACHE, RUNTIME];
+  event.waitUntil(
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return cacheNames.filter((cacheName) => !currentCaches.includes(cacheName));
+      })
+      .then((cachesToDelete) => {
+        return Promise.all(
+          cachesToDelete.map((cacheToDelete) => {
+            return caches.delete(cacheToDelete);
+          })
+        );
+      })
+      .then(() => self.clients.claim())
+  );
 })
 
